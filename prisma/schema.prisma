@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  userId      Int           @id @default(autoincrement())
+  name        String
+  email       String
+  password    String
+  create_at   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  isAdmin     Boolean       @default(false)
+  category    category[]
+  subcategory subcategory[]
+  product     product[]
+  cart        cart[]
+}
+
+model category {
+  catid       Int           @id @default(autoincrement())
+  cart_type   String        @unique
+  userId      Int
+  user        user          @relation(fields: [userId], references: [userId])
+  subcategory subcategory[]
+}
+
+model subcategory {
+  subId       Int       @id @default(autoincrement())
+  subname     String    @unique
+  subimage    String
+  discription String?
+  isDeleted   Boolean   @default(false)
+  cat_catid   Int
+  userId      Int
+  user        user      @relation(fields: [userId], references: [userId])
+  category    category  @relation(fields: [cat_catid], references: [catid])
+  product     product[]
+}
+
+model product {
+  proId          Int         @id @default(autoincrement())
+  proname        String
+  proStock       Int
+  proimage       String
+  proPrice       Decimal
+  proDescription String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  isDeleted      Boolean     @default(false)
+  subId          Int
+  subcate        subcategory @relation(fields: [subId], references: [subId])
+  autherId       Int
+  user           user        @relation(fields: [autherId], references: [userId])
+  cartItem       cartItem[]
+  order          order[]
+}
+
+model cart {
+  cartId     Int        @id @default(autoincrement())
+  careatedAt DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  autherId   Int
+  user       user       @relation(fields: [autherId], references: [userId])
+  cartItem   cartItem[]
+  order      order[]
+}
+
+model cartItem {
+  cartItem   Int      @id @default(autoincrement())
+  careatedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  cartId     Int
+  cart       cart     @relation(fields: [cartItem], references: [cartId])
+  proId      Int
+  product    product  @relation(fields: [proId], references: [proId])
+}
+
+model order {
+  orId       Int       @id @default(autoincrement())
+  orName     String
+  orImage    String
+  orPrice    Decimal
+  orQuantity Int
+  isDeleted  Boolean   @default(false)
+  proId      Int
+  cartId     Int
+  product    product   @relation(fields: [proId], references: [proId])
+  cart       cart      @relation(fields: [cartId], references: [cartId])
+  payment    payment[]
+}
+
+model payment {
+  payId          Int       @id @default(autoincrement())
+  orName         String
+  orQuantity     Int
+  orPrice        Decimal
+  totalPrice     Decimal
+  isPaid         Boolean   @default(false)
+  orId           Int
+  order          order     @relation(fields: [orId], references: [orId])
+  Expenses       Expenses? @relation(fields: [expensesExpId], references: [ExpId])
+  expensesExpId  Int?
+  Income         Income?   @relation(fields: [incomeIncomeId], references: [IncomeId])
+  incomeIncomeId Int?
+}
+
+model Expenses {
+  ExpId     Int       @id @default(autoincrement())
+  ExpAmount Float
+  ExpDate   DateTime
+  payment   payment[]
+  Income         Income? @relation(fields: [incomeIncomeId], references: [IncomeId])
+  incomeIncomeId Int?
+}
+
+model Income {
+  IncomeId     Int        @id @default(autoincrement())
+  IncomeAmount Float
+  IncomeDate   DateTime
+  Expenses     Expenses[]
+  payment      payment[]
+}
